@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Explorer: {{selfText}}</title>
+    <link rel='stylesheet' href='/static/data-explorer.css'>
+  </head>
+  <body>
+    <p class='nav'>
+      <a href='/'>Home</a>
+      Browse
+      <a href='/view{{selfRef}}'>View</a>
+      <a href='/edit{{selfRef}}'>Edit</a>
+    </p>
+    <hr>
+    <p class='reference'>{{selfText}}</p>
+    <table>
+      <tr><th>Key</th><th>Value</th></tr>
+      {{#parentRef}}
+        <tr><td colspan='2'><i><a href='/browse{{parentRef}}'>..</a></i></td></tr>
+      {{/parentRef}}
+      {{#entries}}
+        <tr>
+          <td>
+            {{#keyRef}}<a href='/browse{{keyRef}}'>{{keyText}}</a>{{/keyRef}}
+            {{^keyRef}}{{keyText}}{{/keyRef}}
+          </td>
+          <td>
+            {{#valueRef}}<a href='/view{{valueRef}}'>{{valueText}}</a>{{/valueRef}}
+            {{^valueRef}}{{valueText}}{{/valueRef}}
+          </td>
+        </tr>
+      {{/entries}}
+      {{^entries}}
+        <tr><td colspan='2'><i>(empty)</i></td></tr>
+      {{/entries}}
+    </table>
+  </body>
+</html>

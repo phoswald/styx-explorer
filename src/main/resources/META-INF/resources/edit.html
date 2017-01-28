@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Explorer: {{selfText}}</title>
+    <link rel='stylesheet' href='/static/data-explorer.css'>
+  </head>
+  <body>
+    <p class='nav'>
+      <a href='/'>Home</a>
+      <a href='/browse{{selfRef}}'>Browse</a>
+      <a href='/view{{selfRef}}'>View</a>
+      Edit
+    </p>
+    <hr>
+    <p class='reference'>{{selfText}}</p>
+    {{#errorText}}
+      <p class='error'>Failed to store: {{errorText}}</p>
+    {{/errorText}}
+    <form method='post'>
+      <input type='submit' value='Store'><br>
+      <textarea name='content'>{{contentText}}</textarea>
+    </form>
+  </body>
+</html>

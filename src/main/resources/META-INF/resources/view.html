@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Explorer: {{selfText}}</title>
+    <link rel='stylesheet' href='/static/data-explorer.css'>
+  </head>
+  <body>
+    <p class='nav'>
+      <a href='/'>Home</a>
+      <a href='/browse{{selfRef}}'>Browse</a>
+      View
+      <a href='/edit{{selfRef}}'>Edit</a>
+    </p>
+    <hr>
+    <p class='reference'>{{selfText}}</p>
+    <pre>
+{{contentText}}
+    </pre>
+  </body>
+</html>
