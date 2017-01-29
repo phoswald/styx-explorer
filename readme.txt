@@ -1,0 +1,4 @@
+$ mvn clean verify
+$ java -cp target/data-explorer.jar:"target/lib/*" com.github.phoswald.data.explorer.DataExplorer
+$ sudo docker build -t data-explorer .
+$ sudo docker run -d --name my-container -p 8080:8080 -v ~/styx-data:/usr/local/data-explorer/data data-explorer

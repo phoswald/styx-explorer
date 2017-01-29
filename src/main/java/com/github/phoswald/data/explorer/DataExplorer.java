@@ -8,6 +8,7 @@ import static styx.http.server.Server.route;
 
 import java.io.StringWriter;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -26,16 +27,16 @@ import styx.http.server.Request;
 import styx.http.server.Response;
 import styx.http.server.Server;
 
-public class Main {
+public class DataExplorer {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final int serverPort = Integer.parseInt(System.getProperty("serverPort", "8080"));
     private final String dataStoreUrl = System.getProperty("dataStoreUrl", "./datastore.styx");
-//  private final MustacheFactory mustacheFactory = new DefaultMustacheFactory();
+    private final MustacheFactory templateFactory = new DefaultMustacheFactory();
 
     public static void main(String[] args) {
-        new Main().run();
+        new DataExplorer().run();
     }
 
     public void run() {
@@ -46,6 +47,7 @@ public class Main {
                 routes(
                     route().path("/").toResource("index.html"),
                     route().path("/favicon.ico").toResource("favicon.ico"),
+                    route().path("/time").to((req, res) -> res.write(LocalDateTime.now().toString() + "\n")),
                     route().path("/static/**").toResource("."),
                     route().path("/browse/**").to(this::browse),
                     route().path("/view/**").to(this::view),
@@ -54,14 +56,6 @@ public class Main {
                 run();
         }
         logger.info("Stopping.");
-    }
-
-    private void applyTemplate(Response res, String name, Map<String, Object> scope) {
-        MustacheFactory templateFactory = new DefaultMustacheFactory();
-        Mustache template = templateFactory.compile("META-INF/resources/" + name); // strange: does not work with leading slash!
-        StringWriter writer = new StringWriter();
-        template.execute(writer, scope);
-        res.write(writer.toString());
     }
 
     private void browse(Request req, Response res) {
@@ -162,6 +156,14 @@ public class Main {
             res.contentType("text/plain");
             res.write(generate(value.get(), GeneratorOption.INDENT));
         }
+    }
+
+    private void applyTemplate(Response res, String name, Map<String, Object> scope) {
+//      MustacheFactory templateFactory = new DefaultMustacheFactory();
+        Mustache template = templateFactory.compile("META-INF/resources/" + name); // strange: does not work with leading slash!
+        StringWriter writer = new StringWriter();
+        template.execute(writer, scope);
+        res.write(writer.toString());
     }
 
     private Reference parseReference(Request req) {
