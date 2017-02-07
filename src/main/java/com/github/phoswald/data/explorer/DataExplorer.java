@@ -2,13 +2,16 @@ package com.github.phoswald.data.explorer;
 
 import static com.github.phoswald.data.explorer.MustacheUtils.scope;
 import static com.github.phoswald.data.explorer.MustacheUtils.tag;
+import static styx.data.Values.complex;
 import static styx.data.Values.generate;
 import static styx.data.Values.parse;
+import static styx.data.Values.root;
 import static styx.http.server.Server.route;
 
 import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -19,9 +22,11 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 
 import styx.data.GeneratorOption;
+import styx.data.Pair;
 import styx.data.Reference;
 import styx.data.Store;
 import styx.data.Value;
+import styx.data.exception.InvalidAccessException;
 import styx.data.exception.ParserException;
 import styx.http.server.Request;
 import styx.http.server.Response;
@@ -32,7 +37,7 @@ public class DataExplorer {
     private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final int serverPort = Integer.parseInt(System.getProperty("serverPort", "8080"));
-    private final String dataStoreUrl = System.getProperty("dataStoreUrl", "./datastore.styx");
+    private final String dataStoreUrl = System.getProperty("dataStoreUrl", "jdbc:h2:./datastore");
     private final MustacheFactory templateFactory = new DefaultMustacheFactory();
 
     public static void main(String[] args) {
@@ -61,13 +66,14 @@ public class DataExplorer {
     private void browse(Request req, Response res) {
         Reference reference = parseReference(req);
         logger.info("Browse " + reference);
-        try(Store store = Store.file(Paths.get(dataStoreUrl))) {
-            Optional<Value> value = store.read(reference);
-            if(!value.isPresent()) {
-                res.status(404);
-                return;
-            }
-            if(!value.get().isComplex()) {
+        try(Store store = Store.open(dataStoreUrl)) {
+            List<Pair> children;
+            try {
+                children = store.browse(reference).collect(Collectors.toList());
+            } catch(InvalidAccessException e) {
+                if(!reference.parent().isPresent()) {
+                    store.write(root(), complex());
+                }
                 res.status(303);
                 res.header("location", req.path() + "/..");
                 return;
@@ -76,7 +82,7 @@ public class DataExplorer {
                     tag("selfText", generate(reference)),
                     tag("selfRef", toRef(reference)),
                     tag("parentRef", reference.parent().isPresent() ? toRef(reference.parent().get()) : null),
-                    tag("entries", value.get().asComplex().entries().
+                    tag("entries", children.stream().
                             map(pair -> pair.value().isComplex() ?
                                     scope(  tag("keyText", pair.key().toString()),
                                             tag("valueText", "{ ... }"),
@@ -94,7 +100,7 @@ public class DataExplorer {
     private void view(Request req, Response res) {
         Reference reference = parseReference(req);
         logger.info("View " + reference);
-        try(Store store = Store.file(Paths.get(dataStoreUrl))) {
+        try(Store store = Store.open(dataStoreUrl)) {
             Optional<Value> value = store.read(reference);
             if(!value.isPresent()) {
                 res.status(404);
@@ -114,7 +120,7 @@ public class DataExplorer {
         Reference reference = parseReference(req);
         Optional<String> content = req.param("content");
         logger.info((content.isPresent() ? "Store " : "Edit ") + reference);
-        try(Store store = Store.file(Paths.get(dataStoreUrl))) {
+        try(Store store = Store.open(dataStoreUrl)) {
             String errorText = null;
             String contentText = null;
             if(content.isPresent()) {
@@ -147,7 +153,7 @@ public class DataExplorer {
     private void getContent(Request req, Response res) {
         Reference reference = parseReference(req);
         logger.info("Get Content " + reference);
-        try(Store store = Store.file(Paths.get(dataStoreUrl))) {
+        try(Store store = Store.open(dataStoreUrl)) {
             Optional<Value> value = store.read(reference);
             if(!value.isPresent()) {
                 res.status(404);
