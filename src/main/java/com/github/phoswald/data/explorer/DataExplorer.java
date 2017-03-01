@@ -22,12 +22,12 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 
 import styx.data.GeneratorOption;
+import styx.data.InvalidAccessException;
 import styx.data.Pair;
+import styx.data.ParserException;
 import styx.data.Reference;
 import styx.data.Store;
 import styx.data.Value;
-import styx.data.exception.InvalidAccessException;
-import styx.data.exception.ParserException;
 import styx.http.server.Request;
 import styx.http.server.Response;
 import styx.http.server.Server;
