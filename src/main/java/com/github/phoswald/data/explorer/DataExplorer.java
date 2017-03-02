@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.github.phoswald.data.explorer.MustacheUtils.Flag;
 
 import styx.data.GeneratorOption;
 import styx.data.InvalidAccessException;
@@ -37,7 +38,8 @@ public class DataExplorer {
     private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final int serverPort = Integer.parseInt(System.getProperty("serverPort", "8080"));
-    private final String dataStoreUrl = System.getProperty("dataStoreUrl", "jdbc:h2:./datastore");
+    private final String dataStoreUrl = System.getProperty("dataStoreUrl", "lmdb:./datastore.lmdb");
+    private final boolean templateCache = Boolean.parseBoolean(System.getProperty("templateCache", "true"));
     private final MustacheFactory templateFactory = new DefaultMustacheFactory();
 
     public static void main(String[] args) {
@@ -65,8 +67,28 @@ public class DataExplorer {
 
     private void browse(Request req, Response res) {
         Reference reference = parseReference(req);
-        logger.info("Browse " + reference);
+        Optional<String> addButton = req.param("addButton");
+        Optional<String> addKey = req.param("addKey");
+        Optional<String> addVal = req.param("addVal");
+        Optional<String> delKey = req.param("delKey");
+        logger.info((addButton.isPresent() ? "Add " : delKey.isPresent() ? "Del " : "Browse ") + reference);
         try(Store store = Store.open(dataStoreUrl)) {
+            String error = null;
+            if(addButton.isPresent()) {
+                try {
+                    store.write(reference.child(parse(addKey.get())), parse(addVal.get()));
+                    addKey = Optional.empty();
+                    addVal = Optional.empty();
+                } catch(ParserException e) {
+                    error = "Failed to add: " + e.getMessage();
+                }
+            } else if(delKey.isPresent()) {
+                try {
+                    store.write(reference.child(parse(delKey.get())), null);
+                } catch(ParserException e) {
+                    error = "Failed to delete: " + e.getMessage();
+                }
+            }
             List<Pair> children;
             try {
                 children = store.browse(reference).collect(Collectors.toList());
@@ -82,16 +104,18 @@ public class DataExplorer {
                     tag("selfText", generate(reference)),
                     tag("selfRef", toRef(reference)),
                     tag("parentRef", reference.parent().isPresent() ? toRef(reference.parent().get()) : null),
+                    tag("error", error),
                     tag("entries", children.stream().
                             map(pair -> pair.value().isComplex() ?
-                                    scope(  tag("keyText", pair.key().toString()),
+                                    scope(  tag("keyText", pair.key().toString(), Flag.JS),
                                             tag("valueText", "{ ... }"),
-                                            tag("keyRef", toRef(reference.child(pair.key()))),
-                                            tag("valueRef", toRef(reference.child(pair.key())))) :
-                                    scope(  tag("keyText", pair.key().toString()),
+                                            tag("keyRef", toRef(reference.child(pair.key())))) :
+                                    scope(  tag("keyText", pair.key().toString(), Flag.JS),
                                             tag("valueText", pair.value().toString()),
                                             tag("valueRef", toRef(reference.child(pair.key()))))).
-                            collect(Collectors.toList())));
+                            collect(Collectors.toList())),
+                    tag("addKey", addKey.orElse(null)),
+                    tag("addVal", addVal.orElse(null)));
             res.contentType("text/html");
             applyTemplate(res, "browse.html", scope);
         }
@@ -110,7 +134,7 @@ public class DataExplorer {
                     tag("selfText", generate(reference)),
                     tag("selfRef", toRef(reference)),
                     tag("parentRef", reference.parent().isPresent() ? toRef(reference.parent().get()) : null),
-                    tag("contentText", generate(value.get(), GeneratorOption.INDENT)));
+                    tag("content", generate(value.get(), GeneratorOption.INDENT)));
             res.contentType("text/html");
             applyTemplate(res, "view.html", scope);
         }
@@ -121,30 +145,28 @@ public class DataExplorer {
         Optional<String> content = req.param("content");
         logger.info((content.isPresent() ? "Store " : "Edit ") + reference);
         try(Store store = Store.open(dataStoreUrl)) {
-            String errorText = null;
-            String contentText = null;
+            String error = null;
             if(content.isPresent()) {
-                contentText = content.get();
                 try {
-                    store.write(reference, parse(contentText));
+                    store.write(reference, parse(content.get()));
                 } catch(ParserException e) {
-                    errorText = e.getMessage();
+                    error = "Failed to store: " + e.getMessage();
                 }
             }
-            if(errorText == null) {
+            if(error == null) {
                 Optional<Value> value = store.read(reference);
                 if(!value.isPresent()) {
                     res.status(404);
                     return;
                 }
-                contentText = generate(value.get(), GeneratorOption.INDENT);
+                content = Optional.of(generate(value.get(), GeneratorOption.INDENT));
             }
             Map<String, Object> scope = scope(
                     tag("selfText", generate(reference)),
                     tag("selfRef", toRef(reference)),
                     tag("parentRef", reference.parent().isPresent() ? toRef(reference.parent().get()) : null),
-                    tag("errorText", errorText),
-                    tag("contentText", contentText));
+                    tag("error", error),
+                    tag("content", content.orElse(null)));
             res.contentType("text/html");
             applyTemplate(res, "edit.html", scope);
         }
@@ -165,8 +187,8 @@ public class DataExplorer {
     }
 
     private void applyTemplate(Response res, String name, Map<String, Object> scope) {
-//      MustacheFactory templateFactory = new DefaultMustacheFactory();
-        Mustache template = templateFactory.compile("META-INF/resources/" + name); // strange: does not work with leading slash!
+        Mustache template = (templateCache ? templateFactory : new DefaultMustacheFactory()).
+                compile("META-INF/resources/" + name); // strange: does not work with leading slash!
         StringWriter writer = new StringWriter();
         template.execute(writer, scope);
         res.write(writer.toString());

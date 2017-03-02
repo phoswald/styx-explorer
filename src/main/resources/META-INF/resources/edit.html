@@ -2,23 +2,23 @@
 <html>
   <head>
     <title>Data Explorer: {{selfText}}</title>
-    <link rel='stylesheet' href='/static/data-explorer.css'>
+    <link rel='stylesheet' href='/static/common.css'>
   </head>
   <body>
-    <p class='nav'>
-      <a href='/'>Home</a>
-      <a href='/browse{{selfRef}}'>Browse</a>
-      <a href='/view{{selfRef}}'>View</a>
-      Edit
-    </p>
+    <ul class='nav'>
+      <li><a href='/'>Home</a></li>
+      <li><a href='/browse{{selfRef}}'>Browse</a></li>
+      <li><a href='/view{{selfRef}}'>View</a></li>
+      <li>Edit</li>
+    </ul>
     <hr>
     <p class='reference'>{{selfText}}</p>
-    {{#errorText}}
-      <p class='error'>Failed to store: {{errorText}}</p>
-    {{/errorText}}
+    {{#error}}
+      <p class='error'>{{error}}</p>
+    {{/error}}
     <form method='post'>
       <input type='submit' value='Store'><br>
-      <textarea name='content'>{{contentText}}</textarea>
+      <textarea name='content'>{{content}}</textarea>
     </form>
   </body>
 </html>

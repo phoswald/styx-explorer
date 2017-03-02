@@ -2,21 +2,31 @@
 <html>
   <head>
     <title>Data Explorer: {{selfText}}</title>
-    <link rel='stylesheet' href='/static/data-explorer.css'>
+    <link rel='stylesheet' href='/static/common.css'>
+    <script type="text/javascript" src="/static/browse.js"></script>
   </head>
   <body>
-    <p class='nav'>
-      <a href='/'>Home</a>
-      Browse
-      <a href='/view{{selfRef}}'>View</a>
-      <a href='/edit{{selfRef}}'>Edit</a>
-    </p>
+    <ul class='nav'>
+      <li><a href='/'>Home</a></li>
+      <li>Browse</li>
+      <li><a href='/view{{selfRef}}'>View</a></li>
+      <li><a href='/edit{{selfRef}}'>Edit</a></li>
+    </ul>
     <hr>
     <p class='reference'>{{selfText}}</p>
+    {{#error}}
+      <p class='error'>{{error}}</p>
+    {{/error}}
+    <form id="f" method='post'>
+    <input type='hidden' name='delKey'>
     <table>
-      <tr><th>Key</th><th>Value</th></tr>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+        <th class='last-column'></th>
+      </tr>
       {{#parentRef}}
-        <tr><td colspan='2'><i><a href='/browse{{parentRef}}'>..</a></i></td></tr>
+        <tr><td colspan='3'><i><a href='/browse{{parentRef}}'>..</a></i></td></tr>
       {{/parentRef}}
       {{#entries}}
         <tr>
@@ -28,11 +38,20 @@
             {{#valueRef}}<a href='/view{{valueRef}}'>{{valueText}}</a>{{/valueRef}}
             {{^valueRef}}{{valueText}}{{/valueRef}}
           </td>
+          <td>
+            <button type='button' class='browse-button' onclick='onDelete({{keyTextJS}})'>Delete</button>
+          </td>
         </tr>
       {{/entries}}
       {{^entries}}
-        <tr><td colspan='2'><i>(empty)</i></td></tr>
+        <tr><td colspan='3'><i>(empty)</i></td></tr>
       {{/entries}}
+      <tr>
+        <td><input name='addKey' value='{{addKey}}'></td>
+        <td><input name='addVal' value='{{addVal}}'></td>
+        <td><button name='addButton' type='submit' class='browse-button'>Add</button></td>
+      </tr>
     </table>
+    </form>
   </body>
 </html>

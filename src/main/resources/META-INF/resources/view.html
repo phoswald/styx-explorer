@@ -2,19 +2,19 @@
 <html>
   <head>
     <title>Data Explorer: {{selfText}}</title>
-    <link rel='stylesheet' href='/static/data-explorer.css'>
+    <link rel='stylesheet' href='/static/common.css'>
   </head>
   <body>
-    <p class='nav'>
-      <a href='/'>Home</a>
-      <a href='/browse{{selfRef}}'>Browse</a>
-      View
-      <a href='/edit{{selfRef}}'>Edit</a>
-    </p>
+    <ul class='nav'>
+      <li><a href='/'>Home</a></li>
+      <li><a href='/browse{{selfRef}}'>Browse</a></li>
+      <li>View</li>
+      <li><a href='/edit{{selfRef}}'>Edit</a></li>
+    </ul>
     <hr>
     <p class='reference'>{{selfText}}</p>
     <pre>
-{{contentText}}
+{{content}}
     </pre>
   </body>
 </html>
