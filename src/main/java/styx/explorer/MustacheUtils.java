@@ -1,4 +1,4 @@
-package com.github.phoswald.data.explorer;
+package styx.explorer;
 
 import java.util.EnumSet;
 import java.util.HashMap;

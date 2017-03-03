@@ -8,12 +8,12 @@
     <relativePath />
   </parent>
 
-  <artifactId>data-explorer</artifactId>
+  <artifactId>styx-explorer</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.artifactId}</name>
-  <description>${project.artifactId}</description>
+  <description>A web-based UI for managing STXY data (and a showcase for styx-data and styx-http)</description>
   <url>https://github.com/phoswald/${project.artifactId}</url>
 
   <properties>

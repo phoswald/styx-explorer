@@ -1,11 +1,11 @@
-package com.github.phoswald.data.explorer;
+package styx.explorer;
 
-import static com.github.phoswald.data.explorer.MustacheUtils.scope;
-import static com.github.phoswald.data.explorer.MustacheUtils.tag;
 import static styx.data.Values.complex;
 import static styx.data.Values.generate;
 import static styx.data.Values.parse;
 import static styx.data.Values.root;
+import static styx.explorer.MustacheUtils.scope;
+import static styx.explorer.MustacheUtils.tag;
 import static styx.http.server.Server.route;
 
 import java.io.StringWriter;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.github.phoswald.data.explorer.MustacheUtils.Flag;
 
 import styx.data.GeneratorOption;
 import styx.data.InvalidAccessException;
@@ -29,25 +28,32 @@ import styx.data.ParserException;
 import styx.data.Reference;
 import styx.data.Store;
 import styx.data.Value;
+import styx.explorer.MustacheUtils.Flag;
 import styx.http.server.Request;
 import styx.http.server.Response;
 import styx.http.server.Server;
 
-public class DataExplorer {
+public class Explorer {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    private final int serverPort = Integer.parseInt(System.getProperty("serverPort", "8080"));
-    private final String dataStoreUrl = System.getProperty("dataStoreUrl", "lmdb:./datastore.lmdb");
-    private final boolean templateCache = Boolean.parseBoolean(System.getProperty("templateCache", "true"));
+    private final int serverPort;
+    private final String datastoreUrl;
+    private final boolean templateCache;
     private final MustacheFactory templateFactory = new DefaultMustacheFactory();
 
     public static void main(String[] args) {
-        new DataExplorer().run();
+        new Explorer(new Arguments(args)).run();
+    }
+
+    private Explorer(Arguments args) {
+        this.serverPort = args.getInt("server-port").orElse(8080);
+        this.datastoreUrl = args.getString("datastore-url").orElse("lmdb:data/datastore.lmdb");
+        this.templateCache = args.getBoolean("template-cache").orElse(true);
     }
 
     public void run() {
-        logger.info("Starting (serverPort: " + serverPort + ", dataStoreUrl: " + dataStoreUrl + ").");
+        logger.info("Starting (serverPort: " + serverPort + ", datastoreUrl: " + datastoreUrl + ", templateCache: " + templateCache + ").");
         try(Server server = new Server()) {
             server.
                 port(serverPort).
@@ -72,7 +78,7 @@ public class DataExplorer {
         Optional<String> addVal = req.param("addVal");
         Optional<String> delKey = req.param("delKey");
         logger.info((addButton.isPresent() ? "Add " : delKey.isPresent() ? "Del " : "Browse ") + reference);
-        try(Store store = Store.open(dataStoreUrl)) {
+        try(Store store = Store.open(datastoreUrl)) {
             String error = null;
             if(addButton.isPresent()) {
                 try {
@@ -124,7 +130,7 @@ public class DataExplorer {
     private void view(Request req, Response res) {
         Reference reference = parseReference(req);
         logger.info("View " + reference);
-        try(Store store = Store.open(dataStoreUrl)) {
+        try(Store store = Store.open(datastoreUrl)) {
             Optional<Value> value = store.read(reference);
             if(!value.isPresent()) {
                 res.status(404);
@@ -144,7 +150,7 @@ public class DataExplorer {
         Reference reference = parseReference(req);
         Optional<String> content = req.param("content");
         logger.info((content.isPresent() ? "Store " : "Edit ") + reference);
-        try(Store store = Store.open(dataStoreUrl)) {
+        try(Store store = Store.open(datastoreUrl)) {
             String error = null;
             if(content.isPresent()) {
                 try {
@@ -175,7 +181,7 @@ public class DataExplorer {
     private void getContent(Request req, Response res) {
         Reference reference = parseReference(req);
         logger.info("Get Content " + reference);
-        try(Store store = Store.open(dataStoreUrl)) {
+        try(Store store = Store.open(datastoreUrl)) {
             Optional<Value> value = store.read(reference);
             if(!value.isPresent()) {
                 res.status(404);
