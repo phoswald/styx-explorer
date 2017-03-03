@@ -39,7 +39,7 @@
             {{^valueRef}}{{valueText}}{{/valueRef}}
           </td>
           <td>
-            <button type='button' class='browse-button' onclick='onDelete({{keyTextJS}})'>Delete</button>
+            <button type='button' onclick='onDelete({{keyTextJS}})'>Delete</button>
           </td>
         </tr>
       {{/entries}}
@@ -49,7 +49,7 @@
       <tr>
         <td><input name='addKey' value='{{addKey}}'></td>
         <td><input name='addVal' value='{{addVal}}'></td>
-        <td><button name='addButton' type='submit' class='browse-button'>Add</button></td>
+        <td><button name='addButton' type='submit'>Add</button></td>
       </tr>
     </table>
     </form>

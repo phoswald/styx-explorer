@@ -47,11 +47,14 @@ th {
     font-weight: bold;
 }
 th.last-column {
-    width: 50px;
+    width: 80px;
 }
 th, td {
     border: 1px solid #fff;
     padding: 6px 6px;
+}
+td button, td input {
+    width: 100%;
 }
 pre {
     padding: 6px;
@@ -69,7 +72,12 @@ textarea {
     line-height: 20px;
     color: #000;
     background: #f5f5f5;
+    box-sizing: border-box;
+    resize: vertical;
 }
-.browse-button {
-    width: 80px;
+@media screen and (max-width: 1000px) {
+    body {
+        width: auto;
+        margin: 0 10px;
+    }
 }
