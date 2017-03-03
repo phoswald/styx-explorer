@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>STYX</title>
+    <link rel='stylesheet' href='/static/common.css'>
+  </head>
+  <body>
+    <ul class='nav'>
+      <li><a href='/'>Home</a></li>
+      <li>Login</li>
+    </ul>
+    <hr>
+    <h1>Welcome to STYX</h1>
+    <p>Please enter you credentials:</p>
+    {{#error}}
+      <p class='error'>{{error}}</p>
+    {{/error}}
+    <form id="f" method='post'>
+    <table>
+      <tr>
+        <td class='login-col1'>Username:</td>
+        <td class='login-col2'><input name='username' value='{{username}}'></td>
+      </tr>
+      <tr>
+        <td>Password:</td>
+        <td><input type='password' name='password'></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><input type='submit' value='Login'></td>
+      </tr>
+    </table>
+    </form>
+  </body>
+</html>

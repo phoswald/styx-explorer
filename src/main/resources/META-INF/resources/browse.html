@@ -19,11 +19,11 @@
     {{/error}}
     <form id="f" method='post'>
     <input type='hidden' name='delKey'>
-    <table>
+    <table class='browse'>
       <tr>
         <th>Key</th>
         <th>Value</th>
-        <th class='last-column'></th>
+        <th></th>
       </tr>
       {{#parentRef}}
         <tr><td colspan='3'><i><a href='/browse{{parentRef}}'>..</a></i></td></tr>
@@ -38,7 +38,7 @@
             {{#valueRef}}<a href='/view{{valueRef}}'>{{valueText}}</a>{{/valueRef}}
             {{^valueRef}}{{valueText}}{{/valueRef}}
           </td>
-          <td>
+          <td class='browse-lastcol'>
             <button type='button' onclick='onDelete({{keyTextJS}})'>Delete</button>
           </td>
         </tr>

@@ -36,7 +36,7 @@ a {
 a:hover {
     text-decoration: underline;
 }
-table {
+table.browse {
     width: 100%;
     border-collapse: collapse;
     border-spacing: 2px;
@@ -46,15 +46,22 @@ table {
 th {
     font-weight: bold;
 }
-th.last-column {
-    width: 80px;
-}
 th, td {
     border: 1px solid #fff;
     padding: 6px 6px;
 }
+td.browse-lastcol {
+    width: 80px;
+}
+td.login-col1 {
+    width: 100px;
+}
+td.login-col2 {
+    width: 150px;
+}
 td button, td input {
     width: 100%;
+    box-sizing: border-box;
 }
 pre {
     padding: 6px;
