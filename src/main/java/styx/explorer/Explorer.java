@@ -30,10 +30,8 @@ import styx.data.Reference;
 import styx.data.Store;
 import styx.data.Value;
 import styx.explorer.MustacheUtils.Flag;
-import styx.http.server.DefaultSecurityProvider;
 import styx.http.server.Request;
 import styx.http.server.Response;
-import styx.http.server.SecurityProvider;
 import styx.http.server.Server;
 
 public class Explorer {
@@ -57,31 +55,31 @@ public class Explorer {
 
     public void run() {
         logger.info("Starting (serverPort: " + serverPort + ", datastoreUrl: " + datastoreUrl + ", templateCache: " + templateCache + ").");
-        SecurityProvider sp = new DefaultSecurityProvider();
         try(Server server = new Server()) {
             server.
                 port(serverPort).
+                enableSessions().
                 routes(
                     route().path("/").toResource("index.html"),
                     route().path("/favicon.ico").toResource("favicon.ico"),
                     route().path("/time").to((req, res) -> res.write(LocalDateTime.now().toString() + "\n")),
                     route().path("/static/**").toResource("."),
-                    route().path("/login").to((req, res) -> login(req, res, sp)),
-                    route().secure(sp, "/login").path("/browse/**").to(this::browse),
-                    route().secure(sp, "/login").path("/view/**").to(this::view),
-                    route().secure(sp, "/login").path("/edit/**").to(this::edit),
-                    route().secure(sp, "/login").path("/content/**").to(this::getContent)).
+                    route().path("/login").to((req, res) -> login(req, res, server)),
+                    route().requireSession("/login").path("/browse/**").to(this::browse),
+                    route().requireSession("/login").path("/view/**").to(this::view),
+                    route().requireSession("/login").path("/edit/**").to(this::edit),
+                    route().requireSession("/login").path("/content/**").to(this::getContent)).
                 run();
         }
         logger.info("Stopping.");
     }
 
-    private void login(Request req, Response res, SecurityProvider sp) {
+    private void login(Request req, Response res, Server server) {
         String username = req.param("username").orElse("");
         String password = req.param("password").orElse("");
         String error = null;
         if(username.equals("admin") && password.equals("sesam")) {
-            sp.login(res, Duration.ofDays(1));
+            server.login(res, Duration.ofDays(1));
             res.redirect("/browse");
             return;
         } else if(!username.isEmpty()) {
