@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,9 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 
+import styx.daemon.utils.Arguments;
+import styx.daemon.utils.Daemon;
+import styx.daemon.utils.LogConfig;
 import styx.data.GeneratorOption;
 import styx.data.InvalidAccessException;
 import styx.data.Pair;
@@ -36,6 +40,10 @@ import styx.http.server.Server;
 
 public class Explorer {
 
+    static {
+        LogConfig.activate();
+    }
+
     private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final int serverPort;
@@ -44,16 +52,17 @@ public class Explorer {
     private final MustacheFactory templateFactory = new DefaultMustacheFactory();
 
     public static void main(String[] args) {
-        new Explorer(new Arguments(args)).run();
+        Explorer instance = new Explorer(new Arguments("styx", args));
+        Daemon.main(instance::run);
     }
 
     private Explorer(Arguments args) {
-        this.serverPort = args.getInt("server-port").orElse(8080);
+        this.serverPort = args.getInteger("server-port").orElse(8080);
         this.datastoreUrl = args.getString("datastore-url").orElse("lmdb:data/datastore.lmdb");
         this.templateCache = args.getBoolean("template-cache").orElse(true);
     }
 
-    public void run() {
+    private void run(CountDownLatch latch) throws InterruptedException {
         logger.info("Starting (serverPort: " + serverPort + ", datastoreUrl: " + datastoreUrl + ", templateCache: " + templateCache + ").");
         try(Server server = new Server()) {
             server.
@@ -69,9 +78,9 @@ public class Explorer {
                     route().requireSession("/login").path("/view/**").to(this::view),
                     route().requireSession("/login").path("/edit/**").to(this::edit),
                     route().requireSession("/login").path("/content/**").to(this::getContent)).
-                run();
+                run(latch);
         }
-        logger.info("Stopping.");
+        logger.info("Stopped.");
     }
 
     private void login(Request req, Response res, Server server) {
